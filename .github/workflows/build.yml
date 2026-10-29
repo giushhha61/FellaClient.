@@ -1,0 +1,41 @@
+
+name: Build FellaClient
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'FellaClient.zip'
+      - '.github/workflows/build.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Extract project ZIP
+        run: |
+          unzip -q FellaClient.zip -d extracted
+          find extracted -name gradlew -type f
+
+      - name: Build mod
+        run: |
+          cd "$(dirname "$(find extracted -name gradlew -type f | head -n 1)")"
+          chmod +x gradlew
+          ./gradlew build
+
+      - name: Upload JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: FellaClient-JAR
+          path: extracted/**/build/libs/*.jar
+          if-no-files-found: error
+          
